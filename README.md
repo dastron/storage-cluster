@@ -1,8 +1,8 @@
-# Project Colossus: Distributed Storage Cluster
+# Project Zircon: Distributed Storage Cluster
 
 ## Membership
 
-Membership in Project Colossus is based on contribution to the cluster's resources. The goal of this cluster is to provide safe and reliable backup to all memebers. Understand that this network is support by home networks with the goal of shared storage. Here are some basic requirements for members:
+Membership in Project Zircon is based on contribution to the cluster's resources. The goal of this cluster is to provide safe and reliable backup to all memebers. Understand that this network is support by home networks with the goal of shared storage. Here are some basic requirements for members:
 1. Members are not allowed to use this service for illegal services or activities. 
 2. Members buckets maximum size will be limited, do not exceed those limits.
 3. Limit transfer speeds to 100MiB/s. Limit network traffic to less than 10TB per month.
@@ -53,13 +53,13 @@ Members who contribute storage by providing nodes have the following responsibil
 
 ## Network Summary
 
-Project Colossus is a collaborative, distributed storage cluster designed for resilience and large-scale data management. It operates on a 2x replication factor, meaning every piece of active data (`A`) is stored twice across the cluster (`A * 2`). The cluster is designed to tolerate the failure of any **single largest node**, requiring enough total raw storage to reconstitute the data from that failed node. Members contribute raw storage capacity through dedicated nodes or expanding existing ones with hard drives or donations.
+Project Zircon is a collaborative, distributed storage cluster designed for resilience and large-scale data management. It operates on a 2x replication factor, meaning every piece of active data (`A`) is stored twice across the cluster (`A * 2`). The cluster is designed to tolerate the failure of any **single largest node**, requiring enough total raw storage to reconstitute the data from that failed node. Members contribute raw storage capacity through dedicated nodes or expanding existing ones with hard drives or donations.
 
 This document outlines the system architecture, storage calculations, and recovery buffer strategy.
 
 ## Storage Replication and Recovery Buffer
 
-Project Colossus maintains a **2x replication factor** for all active data (`A`). This ensures data redundancy during normal operation.
+Project Zircon maintains a **2x replication factor** for all active data (`A`). This ensures data redundancy during normal operation.
 
 To handle the failure of the **single largest node** in the cluster, the cluster must maintain sufficient **total raw storage (`S_total`)** to absorb the data from the **single largest node (`T_largest_node`)** and allow for its data to be replicated again to restore the 2x factor across all active data.
 
@@ -112,7 +112,7 @@ The following table shows the distribution based on `A_max = 64 TB`:
 
 ```mermaid
 graph TD
-    subgraph "Project Colossus Storage Cluster"
+    subgraph "Project Zircon Storage Cluster"
         direction LR
         PAE1["Zone: pae1<br>Total: 104TB<br>Avail: 83.7TB<br>RSVD: 20.3TB"]
         SEA1["Zone: sea1<br>Total: 128TB<br>Avail: 103.0TB<br>RSVD: 25.0TB"]
@@ -206,4 +206,4 @@ graph TD
 -  **Implied Reserved Storage**: Calculated as `Total Raw Storage - Implied Available Storage`. The sum of this across all zones constitutes the cluster-level recovery buffer, which must be at least equal to the size of the **single largest node** (64 TB).
 -  **Inter-Zone Links**: The connections depicted in the system map represent logical data pathways or primary replication relationships. The actual network topology might be more intricate.
 -  **Member Contribution**: Member contributions must collectively ensure the cluster\'s `Total Raw Storage` is sufficient to meet the `S_required = (A * 2) + T_largest_node` formula for the desired active data footprint (`A`).
--  **Data Distribution**: The `client-sync` script facilitates managing data movement and backup operations between nodes and zones, contributing to the overall resilience strategy of Project Colossus.
+-  **Data Distribution**: The `client-sync` script facilitates managing data movement and backup operations between nodes and zones, contributing to the overall resilience strategy of Project Zircon.
