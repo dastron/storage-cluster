@@ -77,7 +77,7 @@ Conversely, given the current total raw storage (`S_total`) and the largest node
 
 The cluster's **Total Available Storage** (`S_total - (A * 2)`) must always be greater than or equal to `T_largest_node`.
 
-## Current Cluster Status
+## Future Cluster Plan
 
 Based on the current total raw storage (`S_total` = 328 TB) and the largest node (nova1/nova2, `T_largest_node` = 64 TB), the maximum supportable active data footprint (`A_max`) is 132 TB.
 
