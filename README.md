@@ -23,9 +23,9 @@ For Example:
 > 
 > *Rationale:* When data is stored on the network, it is replicated so that there are two copies distributed. In the event of a node failure, data will be automatically re-replicated to maintain redundancy while the cluster undergoes repair. This approach ensures your data remains protected during failure scenarios, and includes overhead so that none of the nodes are ever 100% full.
 
-### Public Ledger and Accountability
+### Public Allocation
 
-A public ledger will be maintained to track each member's contributions (storage or financial). Their allocated storage usage will be visible on the bucket size limits.
+A public ledger will be maintained to track each member's contributions. Their allocated storage usage will be visible on the bucket size limits.
 
 *   **Storage Allocation:** Members will be allocated storage based on their contributions.
 *   **Exceeding Allocation:** If a member using more storage than their allocated amount will have their API access keys switched to read-only mode.
