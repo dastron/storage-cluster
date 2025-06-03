@@ -17,15 +17,15 @@ To be an active member, individuals or entities must fulfill one of the followin
 *   **Borrow Storage:** Arrange to utilize storage allocated to another member, with mutual agreement.
 
 For Example:
-> **Storage Contribution Formula:** The calculation is straightforward - take the maximum amount of data you wish to store and multiply it by 2.5. This represents the raw storage you need to provide, borrow, or donate.
+> **Storage Contribution Formula:** The calculation is straightforward - take the maximum amount of data you wish to store and multiply it by 3. This represents the raw storage you need to provide, borrow, or donate.
 > 
-> *Example:* If a member provides 25TB of raw storage, they would be allocated a maximum bucket size of 10TB.
+> *Example:* If a member provides 30TB of raw storage, they would be allocated a maximum bucket size of 10TB.
 > 
 > *Rationale:* When data is stored on the network, it is replicated so that there are two copies distributed. In the event of a node failure, data will be automatically re-replicated to maintain redundancy while the cluster undergoes repair. This approach ensures your data remains protected during failure scenarios, and includes overhead so that none of the nodes are ever 100% full.
 
-### Public Allocation
+### Public Ledger and Accountability
 
-A public ledger will be maintained to track each member's contributions. Their allocated storage usage will be visible on the bucket size limits.
+A public ledger will be maintained to track each member's contributions (storage or financial). Their allocated storage usage will be visible on the bucket size limits.
 
 *   **Storage Allocation:** Members will be allocated storage based on their contributions.
 *   **Exceeding Allocation:** If a member using more storage than their allocated amount will have their API access keys switched to read-only mode.
@@ -61,49 +61,24 @@ This document outlines the system architecture, storage calculations, and recove
 
 Project Zircon maintains a **2x replication factor** for all active data (`A`). This ensures data redundancy during normal operation.
 
-To handle the failure of the **single largest node** in the cluster, the cluster must maintain sufficient **total raw storage (`S_total`)** to absorb the data from the **single largest node (`T_largest_node`)** and allow for its data to be replicated again to restore the 2x factor across all active data.
+To handle the failure of any zone, we will leave a buffer of 1/3 of the available storage. The combined storage of all members should not exceed this, so than when a zone or node is lost replication can begin immedately.
 
-**Calculation for Minimum Total Cluster Raw Storage (`S_required`):**
-The minimum total raw storage required across all zones is calculated as:
-`S_required = (A * 2) + T_largest_node`
-
-Where:
-*   `A` = Desired total active data footprint.
-*   `A * 2` = Raw storage needed for 2x replication of active data.
-*   `T_largest_node` = Total raw storage capacity of the single largest node in the cluster. This represents the cluster-level recovery buffer needed.
-
-Conversely, given the current total raw storage (`S_total`) and the largest node (`T_largest_node`), the maximum supportable active data footprint (`A_max`) is:
-`A_max = (S_total - T_largest_node) / 2`
-
-The cluster's **Total Available Storage** (`S_total - (A * 2)`) must always be greater than or equal to `T_largest_node`.
-
-## Future Cluster Plan
-
-Based on the current total raw storage (`S_total` = 328 TB) and the largest node (nova1/nova2, `T_largest_node` = 64 TB), the maximum supportable active data footprint (`A_max`) is 132 TB.
-
-*   **Largest Node:** `nova1`/`nova2` (64 TB each)
-*   **Required Cluster-Level Buffer (for single largest node failure):** 64 TB
-*   **Maximum Supported Active Data (`A_max`):** 132 TB
-*   **Implied Total Used Storage (`A_max * 2`):** 264 TB
-*   **Current Total Available Storage (Buffer):** 328 TB - 264 TB = 64 TB
-*   **Buffer Requirement Met:** Yes (64 TB >= 64 TB)
-
-The following table shows the distribution based on `A_max = 64 TB`:
+## Current Cluster Status
 
 | Zone | Node Name      | Total Raw Storage (TB) | Available Storage (TB)    | Reserve Storage (TB)  | Storage Credit (TB) |
 | :--- | :------------- | :--------------------- | :------------------------ | :-------------------- | :------------------ |
-| pae1 | terra          | 48                     | 38.6                      | 9.4                   | 19                  |
-| pae1 | helios         | 56                     | 45.1                      | 10.9                  | 22                  |
-|      | **Zone Total** | **104**                | **83.7**                  | **20.3**              | **41**              |
-| sea1 | nova1          | 64                     | 51.5                      | 12.5                  | 25                  |
-| sea1 | nova2          | 64                     | 51.5                      | 12.5                  | 25                  |
-|      | **Zone Total** | **128**                | **103.0**                 | **25.0**              | **50**              |
-| oak1 | luna           | 48                     | 38.6                      | 9.4                   | 19                  |
-|      | **Zone Total** | **48**                 | **38.6**                  | **9.4**               | **19**              |
-| pdx1 | eva            | 48                     | 38.6                      | 9.4                   | 19                  |
-|      | **Zone Total** | **48**                 | **38.6**                  | **9.4**               | **19**              |
+| pae1 | uranus         | 48                     | 32                        | 16                    | 16                  |
+|      | **Zone Total** | **48**                 | **32**                    | **16**                | **16**              |
+| sea1 | mars           | 57                     | 38                        | 19                    | 19                  |
+| sea1 | terra          | 48                     | 32                        | 16                    | 16                  |
+|      | **Zone Total** | **105**                | **70**                    | **35**                | **35**              |
+| oak1 | luna           | 72                     | 48                        | 24                    | 24                  |
+|      | **Zone Total** | **72**                 | **48**                    | **24**                | **24**              |
+| pdx1 | venus          | 48                     | 32                        | 16                    | 16                  |
+| pdx1 | helios         | 57                     | 38                        | 19                    | 19                  |
+|      | **Zone Total** | **105**                | **70**                    | **35**                | **35**              |
 | ---  |                |                        |                           |                       |                     |
-|      | **Total**      | **328**                | **264.0**                 | **64.0**              | **132**             |
+|      | **Total**      | **330**                | **220**                   | **110**               | **110**             |
 
 
 ## System Map
@@ -114,10 +89,10 @@ The following table shows the distribution based on `A_max = 64 TB`:
 graph TD
     subgraph "Project Zircon Storage Cluster"
         direction LR
-        PAE1["Zone: pae1<br>Total: 104TB<br>Avail: 83.7TB<br>RSVD: 20.3TB"]
-        SEA1["Zone: sea1<br>Total: 128TB<br>Avail: 103.0TB<br>RSVD: 25.0TB"]
-        OAK1["Zone: oak1<br>Total: 48TB<br>Avail: 38.6TB<br>RSVD: 9.4TB"]
-        PDX1["Zone: pdx1<br>Total: 48TB<br>Avail: 38.6TB<br>RSVD: 9.4TB"]
+        PAE1["Zone: pae1<br>Total: 48TB<br>Avail: 32TB<br>RSVD: 16TB"]
+        SEA1["Zone: sea1<br>Total: 105TB<br>Avail: 70TB<br>RSVD: 35TB"]
+        OAK1["Zone: oak1<br>Total: 72TB<br>Avail: 48TB<br>RSVD: 24TB"]
+        PDX1["Zone: pdx1<br>Total: 105TB<br>Avail: 70TB<br>RSVD: 35TB"]
     end
     
     PAE1 --- SEA1
@@ -127,70 +102,70 @@ graph TD
     PAE1 --- OAK1
     SEA1 --- PDX1
 
-    ClusterTotal["Total Cluster Raw Storage: 328TB<br>Total Used (A*2): 264TB<br>Total RSVD (Buffer): 64TB<br>Max Active Data (A): 132TB"]
+    ClusterTotal["Total Cluster Raw Storage: 330TB<br>Total Available: 220TB<br>Total RSVD (Buffer): 110TB<br>Storage Credits: 110TB"]
 ```
 
-### Zone: pae1 (104TB Total)
+### Zone: pae1 (48TB Total)
 
 ```mermaid
 graph TD
     subgraph "Zone pae1"
         direction LR
-        Terra["Node: terra<br>Total: 48TB<br>Avail: 38.6TB<br>RSVD: 9.4TB"]
-        Helios["Node: helios<br>Total: 56TB<br>Avail: 45.1TB<br>RSVD: 10.9TB"]
+        Uranus["Node: uranus<br>Total: 48TB<br>Avail: 32TB<br>RSVD: 16TB"]
         
-        ZoneStats["Zone Statistics<br>Total: 104TB<br>Avail: 83.7TB<br>RSVD: 20.3TB"]
+        ZoneStats["Zone Statistics<br>Total: 48TB<br>Avail: 32TB<br>RSVD: 16TB"]
     end
-    
-    Terra --- Helios
 ```
 
-### Zone: sea1 (128TB Total)
+### Zone: sea1 (105TB Total)
 
 ```mermaid
 graph TD
     subgraph "Zone sea1"
         direction LR
-        Nova1["Node: nova1<br>Total: 64TB<br>Avail: 51.5TB<br>RSVD: 12.5TB"]
-        Nova2["Node: nova2<br>Total: 64TB<br>Avail: 51.5TB<br>RSVD: 12.5TB"]
+        Mars["Node: mars<br>Total: 57TB<br>Avail: 38TB<br>RSVD: 19TB"]
+        Terra["Node: terra<br>Total: 48TB<br>Avail: 32TB<br>RSVD: 16TB"]
         
-        ZoneStats["Zone Statistics<br>Total: 128TB<br>Avail: 103.0TB<br>RSVD: 25.0TB"]
+        ZoneStats["Zone Statistics<br>Total: 105TB<br>Avail: 70TB<br>RSVD: 35TB"]
     end
     
-    Nova1 --- Nova2
+    Mars --- Terra
 ```
 
-### Zone: oak1 (48TB Total)
+### Zone: oak1 (72TB Total)
 
 ```mermaid
 graph TD
     subgraph "Zone oak1"
         direction LR
-        Luna["Node: luna<br>Total: 48TB<br>Avail: 38.6TB<br>RSVD: 9.4TB"]
+        Luna["Node: luna<br>Total: 72TB<br>Avail: 48TB<br>RSVD: 24TB"]
         
-        ZoneStats["Zone Statistics<br>Total: 48TB<br>Avail: 38.6TB<br>RSVD: 9.4TB"]
+        ZoneStats["Zone Statistics<br>Total: 72TB<br>Avail: 48TB<br>RSVD: 24TB"]
     end
 ```
 
-### Zone: pdx1 (48TB Total)
+### Zone: pdx1 (105TB Total)
 
 ```mermaid
 graph TD
     subgraph "Zone pdx1"
         direction LR
-        Eva["Node: eva<br>Total: 48TB<br>Used: 38.6TB<br>RSVD: 9.4TB"]
+        Venus["Node: venus<br>Total: 48TB<br>Avail: 32TB<br>RSVD: 16TB"]
+        Helios["Node: helios<br>Total: 57TB<br>Avail: 38TB<br>RSVD: 19TB"]
         
-        ZoneStats["Zone Statistics<br>Total: 48TB<br>Used: 38.6TB<br>RSVD: 9.4TB"]
+        ZoneStats["Zone Statistics<br>Total: 105TB<br>Avail: 70TB<br>RSVD: 35TB"]
     end
+    
+    Venus --- Helios
 ```
 
 ### Inter-Zone Data Pathways
 
 ```mermaid
 graph TD
-    PAE1["pae1<br>(104TB)"] --- SEA1["sea1<br>(128TB)"]
-    SEA1 --- OAK1["oak1<br>(48TB)"]
-    OAK1 --- PDX1["pdx1<br>(48TB)"]
+    PAE1["pae1<br>(48TB)"] --- SEA1["sea1<br>(105TB)"]
+    SEA1 --- OAK1["oak1<br>(72TB)"]
+    OAK1 --- PDX1["pdx1<br>(105TB)"]
     PDX1 --- PAE1
     
     PAE1 --- OAK1
